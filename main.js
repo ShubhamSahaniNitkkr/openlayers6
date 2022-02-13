@@ -9,102 +9,92 @@ function init() {
     view: new ol.View({
       center: [04721242, 3041234],
       zoom: 2,
-      //   to limit the rea
-      //   extent: [
-      //     7565041.697447874,
-      //     811584.4625886064,
-      //     10792166.027911734,
-      //     4361421.226098852,
-      //   ],
     }),
-    layers: [
-      new ol.layer.Tile({
-        source: new ol.source.OSM(),
-        zIndex: 1,
-        visible: false,
-        // exten:[LX,BY,RX,TY],
-        extent: [
-          7565041.697447874,
-          811584.4625886064,
-          10792166.027911734,
-          4361421.226098852,
-        ],
-        opacity: 0.5,
-      }),
-    ],
     target: "js-map",
     controls: ol.control
       .defaults({ attribution: false })
       .extend([attributionControl]),
   });
 
-  // Layer group
-
-  const layerGroup = new ol.layer.Group({
-    layers: [
-      new ol.layer.Tile({
-        source: new ol.source.OSM({
-          url: "https://{a-c}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
-          zIndex: 0,
-          visible: false,
-          extent: [
-            7565041.697447874,
-            811584.4625886064,
-            10792166.027911734,
-            4361421.226098852,
-          ],
-          opacity: 0.5,
-        }),
-      }),
-      new ol.layer.Tile({
-        source: new ol.source.BingMaps({
-          key:
-            "Asd2p_SFbrqsiVxWAwjgGGOjR7uG-g5tof3pizdgmr7ckpCDKFlpcLq8z44LmQrk",
-          imagerySet: "AerialWithLabels", //Road, Canvas, CanvasDark, OrdanceSurvey
-        }),
-        visible: false,
-      }),
-    ],
+  const openStreetMap = new ol.layer.Tile({
+    source: new ol.source.OSM(),
+    visible: true,
+    title: "OSMStandard",
   });
-  map.addLayer(layerGroup);
 
-  //   cartoDB base Map
+  const OSMHumanitarian = new ol.layer.Tile({
+    source: new ol.source.OSM({
+      url: "https://{a-c}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
+    }),
+    visible: false,
+    title: "OSMHumanitarian",
+  });
+
+  const BingMaps = new ol.layer.Tile({
+    source: new ol.source.BingMaps({
+      key: "Asd2p_SFbrqsiVxWAwjgGGOjR7uG-g5tof3pizdgmr7ckpCDKFlpcLq8z44LmQrk",
+      imagerySet: "AerialWithLabels", //Road, Canvas, CanvasDark, OrdanceSurvey
+    }),
+    visible: false,
+    title: "BingMaps",
+  });
+
   const cartoDBBaseLayer = new ol.layer.Tile({
     source: new ol.source.XYZ({
       url:
         "http://{1-4}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png",
     }),
     visible: false,
+    title: "CartoDarkAll",
   });
-  map.addLayer(cartoDBBaseLayer);
 
-  //   TileDebug
-  const tileDebuglayer = new ol.layer.Tile({
-    source: new ol.source.TileDebug(),
-    visible: false,
-  });
-  map.addLayer(tileDebuglayer);
-
-  //   stemen layer
   const stamenBaseLayer = new ol.layer.Tile({
     source: new ol.source.XYZ({
       url: "http://tile.stamen.com/terrain/{z}/{x}/{y}.jpg",
     }),
     visible: false,
+    title: "StamenTerrian",
   });
-  map.addLayer(stamenBaseLayer);
 
-  //   argis layer
+  const baseLayerGroup = new ol.layer.Group({
+    layers: [
+      openStreetMap,
+      OSMHumanitarian,
+      BingMaps,
+      cartoDBBaseLayer,
+      stamenBaseLayer,
+    ],
+  });
+  map.addLayer(baseLayerGroup);
+
+  // baselayer swicher logic
+  const baseLayerElements = document.querySelectorAll(
+    ".sidebar > input[type=radio]"
+  );
+  for (let baseElement of baseLayerElements) {
+    baseElement.addEventListener("change", function () {
+      console.log(this.value);
+      baseLayerGroup.getLayers().forEach((element) => {
+        element.setVisible(element.get("title") === this.value);
+      });
+    });
+  }
+
+  const tileDebuglayer = new ol.layer.Tile({
+    source: new ol.source.TileDebug(),
+    title: "debuglayer",
+    visible: false,
+  });
+
   const tileArgisLayer = new ol.layer.Tile({
     source: new ol.source.TileArcGISRest({
       url:
         "http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Demographics/ESRI_Population_World/MapServer",
     }),
+    title: "argislayer",
     visible: false,
   });
-  map.addLayer(tileArgisLayer);
 
-  //   novaa layer
   const noaaWMSLayer = new ol.layer.Tile({
     source: new ol.source.TileWMS({
       url:
@@ -114,14 +104,46 @@ function init() {
         FORMAT: "image/png",
         TRANSPARENT: true,
       },
-      //   attributions: '<a href="https://nowcoast.noaa.gov">@NOVA</a>',
     }),
-    visible: true,
+    title: "novaalayer",
+    visible: false,
   });
 
-  noaaWMSLayer
-    .getSource()
-    .setAttributions('<a href="https://nowcoast.noaa.gov">@Shubham Sunny<a/>');
-  noaaWMSLayer.set("maxZoom", 5);
-  map.addLayer(noaaWMSLayer);
+  const imagelayer = new ol.layer.Image({
+    source: new ol.source.ImageStatic({
+      url: "./india.jpg",
+      imageExtent: [
+        7565041.697447874,
+        811584.4625886064,
+        10792166.027911734,
+        4361421.226098852,
+      ],
+      attribution: "India",
+    }),
+    visible: false,
+    title: "imagelayer",
+  });
+
+  const RasterLayerGroup = new ol.layer.Group({
+    layers: [tileDebuglayer, tileArgisLayer, noaaWMSLayer, imagelayer],
+  });
+  map.addLayer(RasterLayerGroup);
+
+  const RasterLayerElements = document.querySelectorAll(
+    ".sidebar > input[type=checkbox]"
+  );
+  for (let rasterElement of RasterLayerElements) {
+    rasterElement.addEventListener("change", function () {
+      let currentElem;
+      RasterLayerGroup.getLayers().forEach((element) => {
+        console.log(this.value, element.get("title"));
+        if (this.value === element.get("title")) {
+          currentElem = element;
+        }
+      });
+      this.checked
+        ? currentElem.setVisible(true)
+        : currentElem.setVisible(false);
+    });
+  }
 }
