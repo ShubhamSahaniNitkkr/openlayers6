@@ -16,6 +16,48 @@ function init() {
       .extend([attributionControl]),
   });
 
+  const openstreetVectorTile = new ol.layer.VectorTile({
+    source: new ol.source.VectorTile({
+      url:
+        "https://api.maptiler.com/tiles/v3-openmaptiles/{z}/{x}/{y}.pbf?key=z3SiQ8F8nlnnyDY0S9Pi",
+      format: new ol.format.MVT(),
+      attribution:
+        '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
+    }),
+    title: "openstreetVectorTile",
+    visible: false,
+  });
+
+  const openstreetVectorTileStyle =
+    "https://api.maptiler.com/maps/5c467b6d-0dbb-44a3-be0a-71e5f5e4d281/style.json?key=z3SiQ8F8nlnnyDY0S9Pi";
+  fetch(openstreetVectorTileStyle).then(function (response) {
+    response.json().then(function (glstyle) {
+      console.log(glstyle);
+      olms.applyStyle(openstreetVectorTile, glstyle, "v3-openmaptiles");
+    });
+  });
+
+  const geoJsonIndiaStatesLayer = new ol.layer.VectorImage({
+    source: new ol.source.Vector({
+      url: "./data/vectors/map.geojson",
+      format: new ol.format.GeoJSON(),
+    }),
+    visible: false,
+    title: "geoJsonIndiaStates",
+  });
+
+  const heapMapVectorTileLayer = new ol.layer.Heatmap({
+    source: new ol.source.Vector({
+      url: "./data/vectors/heatmap.geojson",
+      format: new ol.format.GeoJSON(),
+    }),
+    radius: 20,
+    blur: 12,
+    // gradient:[''],
+    title: "heapMapVectorTile",
+    visible: false,
+  });
+
   const openStreetMap = new ol.layer.Tile({
     source: new ol.source.OSM(),
     visible: true,
@@ -63,6 +105,9 @@ function init() {
       BingMaps,
       cartoDBBaseLayer,
       stamenBaseLayer,
+      openstreetVectorTile,
+      geoJsonIndiaStatesLayer,
+      heapMapVectorTileLayer,
     ],
   });
   map.addLayer(baseLayerGroup);
@@ -111,7 +156,7 @@ function init() {
 
   const imagelayer = new ol.layer.Image({
     source: new ol.source.ImageStatic({
-      url: "./india.jpg",
+      url: "./data/images/india.jpg",
       imageExtent: [
         7565041.697447874,
         811584.4625886064,
